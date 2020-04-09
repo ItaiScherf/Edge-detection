@@ -1,0 +1,75 @@
+from PIL import Image
+
+import urllib
+import random
+
+
+def display_image(im):
+    fn = str(random.randint(1, 500)) + ".bmp"
+    im.save(fn)
+    print("<img src=\"/resources/{}\">".format(fn))
+    print("")
+
+
+Image.Image.show = display_image
+
+
+def items(mat, x, y):
+    # flatten 3-by-3 square elements around mat[x,y] into a list
+    lst = []
+    for a in range(x - 1, x + 2):
+        for b in range(y - 1, y + 2):
+            lst.append(mat[a, b])
+    return lst
+
+
+def median(lst):
+    sort_lst = sorted(lst)
+    n = len(sort_lst)
+    return sort_lst[n // 2]
+
+
+
+def clean_sp(img):
+    # cleans salt and pepper noise from mat
+    img = img.convert('L')
+    w, h = img.size
+    mat = img.load()
+    clean_img = img.copy()
+    clean_mat = clean_img.load()
+    for x in range(1, w - 1):
+        for y in range(1, h - 1):
+            if (mat[x, y] == 0) or (mat[x, y] == 255):  # needs cleaning
+                clean_mat[x, y] = median(items(mat, x, y))
+    return clean_img
+
+def edge_detection(img):
+    img = img.convert('L')
+    output = Image.new('L',img.size, 255)
+    for i in range(1, img.size[0]-1):
+        for j in range(1, img.size[1]-1):
+            framesum = 0
+            for m in range(-1,2):
+                for n in range(-1,2):
+                    framesum += img.getpixel((i+m, j+n))
+            output.putpixel((i, j), img.getpixel((i, j)) * 9 - framesum)
+    output.show()
+
+def edge_detection_improved(img,dim):
+    img = img.convert('L')
+    output = Image.new('L',img.size, 255)
+    negdim = (-1)*dim
+    framesize = (2*dim+1)**2
+    for i in range(dim, img.size[0]-dim):
+        for j in range(dim, img.size[1]-dim):
+            framesum = 0
+            for m in range(negdim,dim+1):
+                for n in range(negdim,dim +1):
+                    framesum += img.getpixel((i+m, j+n))
+            output.putpixel((i, j), img.getpixel((i, j)) * framesize - framesum)
+    output.show()
+
+
+img = Image.open("moon.JPG")
+edge_detection_improved(img,2)
+
